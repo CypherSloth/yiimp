@@ -249,7 +249,7 @@ function doLiveCoinTrading($quick = false)
 	/* Withdrawals */
 	$btcaddr = YAAMP_BTCADDRESS;
 	$withdraw_min = exchange_get($exchange, 'withdraw_min_btc', EXCH_AUTO_WITHDRAW);
-	$withdraw_fee = exchange_get($exchange, 'withdraw_fee_btc', 0.0005);
+	$withdraw_fee = exchange_get($exchange, 'withdraw_fee_btc', 0.0003);
 	if (floatval($withdraw_min) > 0 && $savebalance->balance >= ($withdraw_min + $withdraw_fee)) {
 		$amount = $savebalance->balance - $withdraw_fee;
 		debuglog("$exchange: withdraw $amount BTC to $btcaddr");

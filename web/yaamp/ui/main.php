@@ -11,12 +11,40 @@ echo <<<END
 
 <head>
 
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-109592601-2"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-109592601-2');
+</script>
+
+<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<script>
+  (adsbygoogle = window.adsbygoogle || []).push({
+    google_ad_client: "ca-pub-4258076044209348",
+    enable_page_level_ads: true
+  });
+</script>
+
+//<script>
+//  (function(b,i,t,C,O,I,N) {
+//    window.addEventListener('load',function() {
+//      if(b.getElementById(C))return;
+//      I=b.createElement(i),N=b.getElementsByTagName(i)[0];
+//      I.src=t;I.id=C;N.parentNode.insertBefore(I, N);
+//    },false)
+//  })(document,'script','https://widgets.bitcoin.com/widget.js','btcwdgt');
+//</script>
+
 <meta charset="utf-8">
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
 
-<meta name="description" content="Yii mining pools for alternative crypto currencies">
-<meta name="keywords" content="anonymous,mining,pool,maxcoin,bitcoin,altcoin,auto,switch,exchange,profit,decred,scrypt,x11,x13,x14,x15,lbry,lyra2re,neoscrypt,sha256,quark,skein2">
+<meta name="description" content="GigaRho Mining Pool">
+<meta name="keywords" content="gigarho,multi,anonymous,mining,pool,bitcoin,altcoin,auto,switch,exchange,profit,scrypt,x11,x13,x14,x15,lbry,lyra2re,neoscrypt,sha256,quark,skein2">
 
 END;
 
@@ -80,16 +108,25 @@ function showItemHeader($selected, $url, $name)
 
 function showPageHeader()
 {
+
 	echo '<div class="tabmenu-out">';
 	echo '<div class="tabmenu-inner">';
 
-	echo '&nbsp;&nbsp;<a href="/">'.YAAMP_SITE_NAME.'</a>';
+	//echo '&nbsp;&nbsp;<a href="/">'.YAAMP_SITE_NAME.'</a>';
+	echo '
+        <html>
+	<a href="https://gigarho.com/">
+        <img src="https://i.imgur.com/eYlMYnb.png" width="65" height="14" title="GigaRho" alt="GigaRho" />
+        </a>
+	</html>';
+
 
 	$action = controller()->action->id;
 	$wallet = user()->getState('yaamp-wallet');
 	$ad = isset($_GET['address']);
 
 	showItemHeader(controller()->id=='site' && $action=='index' && !$ad, '/', 'Home');
+	//showItemHeader($action=='forum', 'https://forum.gigarho.com', 'Forum');
 	showItemHeader($action=='mining', '/site/mining', 'Pool');
 	showItemHeader(controller()->id=='site'&&($action=='index' || $action=='wallet') && $ad, "/?address=$wallet", 'Wallet');
 	showItemHeader(controller()->id=='stats', '/stats', 'Graphs');
@@ -122,6 +159,9 @@ function showPageHeader()
 			showItemHeader(controller()->id=='nicehash', '/nicehash', 'Nicehash');
 	}
 
+	showItemHeader($action=='forums', 'https://gigarho.com/index.php/forum', 'Forums');
+
+
 	echo '<span style="float: right;">';
 
 	$mining = getdbosql('db_mining');
@@ -138,10 +178,11 @@ function showPageFooter()
 	echo '<div class="footer">';
 	$year = date("Y", time());
 
-	echo "<p>&copy; $year ".YAAMP_SITE_NAME.' - '.
-		'<a href="http://github.com/tpruvot/yiimp">Open source Project</a></p>';
+	echo "<p>&copy; $year ".
+		'<a href="http://www.gigarho.com/">GigaRho, LLC</a></p>';
 
 	echo '</div><!-- footer -->';
 }
+
 
 

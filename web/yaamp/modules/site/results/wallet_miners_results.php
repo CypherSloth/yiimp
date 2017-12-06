@@ -1,4 +1,5 @@
 <?php
+//include 'current_results.php';
 
 $user = getuserparam(getparam('address'));
 if(!$user) return;
@@ -17,6 +18,7 @@ echo '<table class="dataGrid2">';
 echo "<thead>";
 echo "<tr>";
 echo "<th align=left>Summary</th>";
+//echo "<th>Daily Live Estimate</th>";
 echo "<th align=right>Miners</th>";
 echo "<th align=right>Shares</th>";
 echo "<th align=right width=80>Hashrate*</th>";
@@ -58,9 +60,11 @@ foreach(yaamp_get_algos() as $algo)
 
 	if(!$total_shares) continue;
 	$percent_shares = round($user_shares * 100 / $total_shares, 4);
+//	$livedailyestimate = ($user_rate1 * $btcmhday1);
 
 	echo '<tr class="ssrow">';
 	echo '<td><b>'.$algo.'</b></td>';
+//	echo '<td align="left" width=100">'.$livedailyestimate.'</td>';
 	echo '<td align="right">'.$minercount.'</td>';
 	echo '<td align="right" width="100">'.$percent_shares.'%</td>';
 	echo '<td align="right" width="100"><b>'.$user_rate1.'</b></td>';
@@ -125,8 +129,8 @@ if(count($workers))
 echo "</div>";
 
 echo "<p style='font-size: .8em'>
-		&nbsp;* approximate from the last 5 minutes submitted shares<br>
-		&nbsp;** extranonce.subscribe<br>
+		&nbsp;* Approximate from the last 5 minutes of submitted shares<br>
+		&nbsp;** Extranonce.subscribe activated<br>
 		</p>";
 
 echo "</div><br>";

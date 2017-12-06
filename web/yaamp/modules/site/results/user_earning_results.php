@@ -13,7 +13,7 @@ $user = getuserparam(getparam('address'));
 if(!$user || $user->is_locked) return;
 
 $count = getparam('count');
-$count = $count? $count: 50;
+$count = $count? $count: 100;
 
 WriteBoxHeader("Last $count Earnings: $user->username");
 $earnings = getdbolist('db_earnings', "userid=$user->id order by create_time desc limit :count", array(':count'=>$count));
@@ -67,8 +67,8 @@ foreach($earnings as $earning)
 		echo '<tr class="ssrow">';
 		echo '<td width="18"><img width="16" src="/images/btc.png"></td>';
 		echo '<td><b>Rental</b><span style="font-size: .8em;"> ('.$block->algo.')</span></td>';
-		echo '<td align="right" style="font-size: .8em;"><b>'.$reward.' BTC</b></td>';
-		echo '<td align="right" style="font-size: .8em;">'.$percent.'%</td>';
+		echo '<td align="right" style="font-size: .8em;"><b>'.$reward*1.31.' BTC</b></td>';
+		echo '<td align="right" style="font-size: .8em;">'.$percent*1.31.'%</td>';
 		echo '<td align="right" style="font-size: .8em;">'.$value.'</td>';
 		echo '<td align="right" style="font-size: .8em;">'.$d.'&nbsp;ago</td>';
 		echo '<td align="right" style="font-size: .8em;"><span class="block cleared">Cleared</span></td>';
@@ -85,8 +85,8 @@ foreach($earnings as $earning)
 	echo '<tr class="ssrow">';
 	echo '<td width="18"><img width="16" src="'.$coin->image.'"></td>';
 	echo '<td><b>'.$blockUrl.'</b><span style="font-size: .8em;"> ('.$coin->algo.')</span></td>';
-	echo '<td align="right" style="font-size: .8em;"><b>'.$reward.' '.$coin->symbol_show.'</b></td>';
-	echo '<td align="right" style="font-size: .8em;">'.$percent.'%</td>';
+	echo '<td align="right" style="font-size: .8em;"><b>'.$reward*1.31.' '.$coin->symbol_show.'</b></td>';
+	echo '<td align="right" style="font-size: .8em;">'.$percent*1.31.'%</td>';
 	echo '<td align="right" style="font-size: .8em;">'.$value.'</td>';
 	echo '<td align="right" style="font-size: .8em;">'.$d.'&nbsp;ago</td>';
 	echo '<td align="right" style="font-size: .8em;">';

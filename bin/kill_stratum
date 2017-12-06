@@ -6,8 +6,12 @@ if [ $? ]; then
 	if [ $PS ]; then
 		kill $PS
 		echo "killed stratum process $PS"
-	else
-		echo "Process not found"
-		exit 1
+	#else
+	#	echo "Process not found"
+	#	exit 1
 	fi
 fi
+
+# Kill any straggler screen processes spawned by rc.local
+for pid in `ps -ef | grep /var/stratum/run.sh | grep -v grep | awk {'print $2'}`; do kill -7 $pid; done
+for pid in `ps -ef | grep /var/web | grep sh | grep -v grep | awk {'print $2'}`; do kill -7 $pid; done

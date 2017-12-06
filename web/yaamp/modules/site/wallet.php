@@ -101,12 +101,34 @@ END;
 
 echo <<<END
 <div class="main-left-box">
+<div class="main-left-title">Rent More Hashpower</div>
+<div class="main-left-inner">
+
+<ul>
+<li>Want to increase your profits even more by placing a timed order for more hashpower? Head on over to one of our recommended affiliate websites to bid on a hashing contract to use with our pool services.</li>
+<li>Be sure to click on the image below to be directed to their site and if you successfully initiate an order with them, just enter our pool connection details for your preferred algorithm (i.e. Scrypt) and begin mining!<li>
+<center>
+<a href="https://www.nicehash.com/buy?refby=639028" target="_blank">
+<img src="/images/stuff/nhb1short.png" />
+</a>
+<a href="https://www.miningrigrentals.com/?ref=48970" target="_blank">
+<img src="/images/stuff/mrr1long.png" width="250" height="60"/>
+</a>
+</center>
+</ul>
+</div></div>
+<br>
+END;
+
+echo <<<END
+<div class="main-left-box">
 <div class="main-left-title">Search Wallet:</div>
 <div class="main-left-inner">
 <form action="/" method="get" style="padding: 10px;">
 <input type="text" name="address" class="main-text-input" placeholder="Wallet Address">
 <input type="submit" value="Submit" class="main-submit-button" ><br><br>
 END;
+
 
 echo "<table class='dataGrid2'>";
 foreach($recents as $addr)

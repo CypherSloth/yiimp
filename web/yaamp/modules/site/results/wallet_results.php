@@ -10,7 +10,8 @@ function WriteBoxHeader($title)
 $mining = getdbosql('db_mining');
 $defaultalgo = user()->getState('yaamp-algo');
 
-$show_details = getparam('showdetails');
+//$show_details = getparam('showdetails');
+$show_details = true;
 
 $user = getuserparam(getparam('address'));
 if(!$user) return;
@@ -125,8 +126,8 @@ if(!$show_details && $total_unsold > 0)
 	</td></tr>';
 }
 
-echo '<tr class="ssrow" style="border-top: 3px solid #eee;">';
-
+//echo '<tr class="ssrow" style="border-top: 3px solid #eee;">';
+echo '<tr class="ssrow" style="border-top:5px solid #848894;">';
 echo '<td valign="top"><img width="16" src="'.$refcoin->image.'"></td>';
 echo '<td valign="top"><b>';
 
@@ -198,7 +199,7 @@ echo "</tr>";
 //$delay = 7*24*60*60;
 
 $total_earned = bitcoinvaluetoa($total_unsold + $balance + $total_paid);
-//$total_earned_usd = number_format($total_earned*$mining->usdbtc*$refcoin->price, 3, '.', ' ');
+$total_earned_usd = number_format($total_earned*$mining->usdbtc*$refcoin->price, 3, '.', ' ');
 
 echo "<tr class='ssrow' style='border-top: 3px solid #eee;'>";
 echo "<td><img width=16 src='$refcoin->image'></td>";
@@ -212,10 +213,11 @@ echo "</table>";
 echo "</div>";
 
 echo '<p style="font-size: .8em; margin-top: 0; padding-left: 4px;">';
-echo '* approximate from current exchange rates<br/>';
+echo '* Approximation from current exchange rates<br/>';
 if ($refcoin->symbol == 'BTC') {
 	$usd = number_format($mining->usdbtc, 2, '.', ' ');
-	echo '** bitstamp <b>$usd</b> USD/BTC';
+	echo '** Bitstamp Rate: <b>$usd</b> USD/BTC';
+	//echo '<div class="btcwdgt-price"></div>';
 }
 echo '</p>';
 
@@ -227,10 +229,10 @@ if ($refcoin->payout_min) {
 
 echo '</div><br/>';
 
-$header = "Last 24 Hours Payouts: ".$user->username;
+$header = "Last 3 Days Payouts: ".$user->username;
 WriteBoxHeader($header);
 
-$t = time()-24*60*60;
+$t = time()-24*60*60*3;
 $list = getdbolist('db_payouts', "account_id={$user->id} AND time>$t ORDER BY time DESC");
 
 echo "<table  class='dataGrid2'>";

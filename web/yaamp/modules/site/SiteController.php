@@ -8,10 +8,12 @@ class SiteController extends CommonController
 	// Security Note: You can rename this action as you
 	// want, to customize the admin entrance url...
 	//
-	public function actionAdminRights()
+	public function actionAuthDashpanel()
 	{
 		$client_ip = arraySafeVal($_SERVER,'REMOTE_ADDR');
 		$valid = isAdminIP($client_ip);
+		#$valid = true;
+
 
 		if (arraySafeVal($_SERVER,'HTTP_X_FORWARDED_FOR','') != '') {
 			debuglog("admin access attempt via IP spoofing!");
@@ -24,6 +26,7 @@ class SiteController extends CommonController
 			debuglog("admin connect failure from $client_ip");
 
 		user()->setState('yaamp_admin', $valid);
+		#user()->setState('yaamp_admin', true);
 
 		$this->redirect("/site/common");
 	}

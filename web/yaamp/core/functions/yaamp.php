@@ -63,6 +63,7 @@ function yaamp_get_algos()
 function yaamp_algo_mBTC_factor($algo)
 {
 	switch($algo) {
+	case 'x11':
 	case 'sha256':
 	case 'sha256t':
 	case 'blake':

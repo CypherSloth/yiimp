@@ -22,11 +22,11 @@ echo <<<END
 <th data-sorter="numeric" align="right">Coins</th>
 <th data-sorter="numeric" align="right">Miners</th>
 <th data-sorter="numeric" align="right">Hashrate</th>
-<th data-sorter="currency" align="right">Fees**</th>
+<th data-sorter="currency" align="right">Fee**</th>
 <th data-sorter="currency" class="estimate" align="right">Current<br>Estimate</th>
 <!--<th data-sorter="currency" >Norm</th>-->
-<th data-sorter="currency" class="estimate" align="right">24 Hours<br>Estimated</th>
-<th data-sorter="currency"align="right">24 Hours<br>Actual***</th>
+<th data-sorter="currency" class="estimate" align="right">24 Hour<br>Estimate</th>
+<th data-sorter="currency"align="right">24 Hour<br>Actual***</th>
 </tr>
 </thead>
 END;
@@ -64,7 +64,7 @@ usort($algos, 'cmp');
 $total_coins = 0;
 $total_miners = 0;
 
-$showestimates = false;
+$showestimates = true;
 
 echo "<tbody>";
 foreach($algos as $item)
@@ -125,7 +125,8 @@ foreach($algos as $item)
 	echo "<td align=right style='font-size: .8em;'>".($coins==1 ? $coinsym : $coins)."</td>";
 	echo "<td align=right style='font-size: .8em;'>$workers</td>";
 	echo '<td align="right" style="font-size: .8em;" data="'.$hashrate.'">'.$hashrate_sfx.'</td>';
-	echo "<td align=right style='font-size: .8em;'>{$fees}%</td>";
+	//echo "<td align=right style='font-size: .8em;'>{$fees}%</td>";
+	echo "<td align=right style='font-size: .8em;'>2%</td>";
 
 	if($algo == $best_algo)
 		echo '<td class="estimate" align="right" style="font-size: .8em;" title="normalized '.$norm.'"><b>'.$price.'*</b></td>';
@@ -170,9 +171,9 @@ echo "</tr>";
 echo "</table>";
 
 echo "<p style='font-size: .8em'>
-		&nbsp;* best normalized multi algo<br>
-		&nbsp;** fees are now fixed manually.<br>
-		&nbsp;*** values in mBTC/Mh/day (mBTC/Gh/day for sha256 and blake algos)<br>
+		&nbsp;* Estimates based on live profitability<br>
+		&nbsp;** Fees support pool growth and stability<br>
+		&nbsp;*** Values in mBTC/Mh/day (mBTC/Gh/day for x11, sha256 and blake algos)<br>
 		</p>";
 
 echo "</div></div><br>";

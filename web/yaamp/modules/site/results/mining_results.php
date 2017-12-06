@@ -54,6 +54,7 @@ echo <<<END
 <th align="right">Amount</th>
 <th data-sorter="numeric" align="right">Diff</th>
 <th align="right">Block</th>
+<th align="right">Found</th>
 <th align="right">TTF***</th>
 <th data-sorter="numeric" align="right">Hash**</th>
 <th data-sorter="currency" align="right">Profit*</th>
@@ -97,6 +98,13 @@ foreach($list as $coin)
 	$min_ttf = $coin->network_ttf>0? min($coin->actual_ttf, $coin->network_ttf): $coin->actual_ttf;
 	$network_hash = $coin->difficulty * 0x100000000 / ($min_ttf? $min_ttf: 60);
 	$network_hash = $network_hash? 'network hash '.Itoa2($network_hash).'h/s': '';
+
+	$h = $coin->block_height-100;
+	$ss1 = dboscalar("SELECT count(*) FROM blocks WHERE coin_id={$coin->id} AND height>=$h AND category!='orphan'");
+	$ss2 = dboscalar("SELECT count(*) FROM blocks WHERE coin_id={$coin->id} AND height>=$h AND category='orphan'");
+	$percent_pool1 = $ss1? $ss1.'%': '';
+	$percent_pool2 = $ss2? $ss2.'%': '';
+
 
 	if(controller()->admin && $services)
 	{
@@ -164,8 +172,24 @@ foreach($list as $coin)
 
 	if(!empty($coin->errors))
 		echo "<td align=right style='font-size: .8em; color: red;' title='$coin->errors'>$height</td>";
+		
 	else
 		echo "<td align=right style='font-size: .8em;'>$height</td>";
+		
+	echo '<td align="right" style="font-size: .8em;" title="Pool % of last 100 net blocks">';
+		if($ss1 > 50)
+			echo '<span class="blue">'.$percent_pool1.'</span>';
+		else
+			echo $percent_pool1;
+		echo '<span class="red" title="Orphan Blocks"> '.$percent_pool2.'</span></td>';
+//Percent of last blocks
+//	echo '<td align="right" style="font-size: .9em;" title="Pool % of last 100 net blocks">';
+//	if($ss1 > 50)
+//		echo '<b>'.$btcmhd.'</b><br/><span class="blue">'.$percent_pool1.'</span>';
+//	else
+//		echo '<b>'.$btcmhd.'</b><br/>'.$percent_pool1;
+//	echo '<span class="red" title="orphans"> '.$percent_pool2.'</span></td>';
+//
 
 	if(!YAAMP_ALLOW_EXCHANGE && !empty($real_ttf))
 		echo '<td align="right" style="font-size: .8em;" title="'.$pool_ttf.' at full pool speed">'.$real_ttf.'</td>';
@@ -223,9 +247,9 @@ if(isset($price_rent) && $showrental)
 echo "</table>";
 
 echo "<p style='font-size: .8em'>
-		&nbsp;*** estimated average time to find a block at full pool speed<br>
-		&nbsp;** approximate from the last 5 minutes submitted shares<br>
-		&nbsp;* 24h estimation from network difficulty in mBTC/Mh/day (mBTC/Gh/day for sha256 and blake algos)<br>
+		&nbsp;*** Estimate of average time to find a block at full pool speed<br>
+		&nbsp;** Approximation from the last 5 minutes of submitted shares<br>
+		&nbsp;* 24hr estimation from network difficulty in mBTC/Mh/day (mBTC/Gh/day for x11, sha256 and blake algos)<br>
 		</p>";
 
 echo "</div></div><br>";
