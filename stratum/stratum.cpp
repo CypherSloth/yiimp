@@ -24,13 +24,17 @@ char g_sql_database[1024];
 char g_sql_username[1024];
 char g_sql_password[1024];
 
-char g_stratum_algo[1024];
+char g_stratum_coin_include[256];
+char g_stratum_coin_exclude[256];
+
+char g_stratum_algo[256];
 double g_stratum_difficulty;
 
 int g_stratum_max_ttf;
 int g_stratum_max_cons = 5000;
 bool g_stratum_reconnect;
 bool g_stratum_renting;
+bool g_stratum_segwit;
 bool g_autoexchange = true;
 
 uint64_t g_max_shares = 0;
@@ -135,6 +139,7 @@ YAAMP_ALGO g_algos[] =
 	{"tribus", tribus_hash, 1, 0, 0},
 	{"keccak", keccak256_hash, 0x80, 0, sha256_hash_hex },
 	{"phi", phi_hash, 1, 0, 0},
+	{"polytimos", polytimos_hash, 1, 0, 0},
 	{"skunk", skunk_hash, 1, 0, 0},
 
 	{"bmw", bmw_hash, 1, 0, 0},
@@ -213,6 +218,12 @@ int main(int argc, char **argv)
 	strcpy(g_sql_database, iniparser_getstring(ini, "SQL:database", NULL));
 	strcpy(g_sql_username, iniparser_getstring(ini, "SQL:username", NULL));
 	strcpy(g_sql_password, iniparser_getstring(ini, "SQL:password", NULL));
+
+	// optional coin filters (to mine only one on a special port or a test instance)
+	char *coin_filter = iniparser_getstring(ini, "WALLETS:include", NULL);
+	strcpy(g_stratum_coin_include, coin_filter ? coin_filter : "");
+	coin_filter = iniparser_getstring(ini, "WALLETS:exclude", NULL);
+	strcpy(g_stratum_coin_exclude, coin_filter ? coin_filter : "");
 
 	strcpy(g_stratum_algo, iniparser_getstring(ini, "STRATUM:algo", NULL));
 	g_stratum_difficulty = iniparser_getdouble(ini, "STRATUM:difficulty", 16);

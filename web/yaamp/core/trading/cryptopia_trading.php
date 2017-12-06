@@ -1,9 +1,7 @@
 <?php
-
 function doCryptopiaCancelOrder($OrderID=false)
 {
 	if(!$OrderID) return;
-
 	$params = array('CancelType'=>'Trade', 'OrderId'=>$OrderID);
 	$res = cryptopia_api_user('CancelTrade', $params);
 	if($res && $res->Success) {
@@ -13,23 +11,18 @@ function doCryptopiaCancelOrder($OrderID=false)
 		if($db_order) $db_order->delete();
 	}
 }
-
 function doCryptopiaTrading($quick=false)
 {
 	$exchange = 'cryptopia';
 	$updatebalances = true;
-
 	if (exchange_get($exchange, 'disabled')) return;
-
 	$balances = cryptopia_api_user('GetBalance');
 	if (!is_object($balances)) return;
-
 	$savebalance = getdbosql('db_balances', "name='$exchange'");
 	if (is_object($savebalance)) {
 		$savebalance->balance = 0;
 		$savebalance->save();
 	}
-
 	if (is_array($balances->Data))
 	foreach($balances->Data as $balance)
 	{
@@ -40,7 +33,6 @@ function doCryptopiaTrading($quick=false)
 			}
 			continue;
 		}
-
 		if ($updatebalances) {
 			// store available balance in market table
 			$coins = getdbolist('db_coins', "symbol=:symbol OR symbol2=:symbol",
@@ -63,43 +55,34 @@ function doCryptopiaTrading($quick=false)
 			}
 		}
 	}
-
 	if (!YAAMP_ALLOW_EXCHANGE) return;
-
 	$flushall = rand(0, 8) == 0;
 	if($quick) $flushall = false;
-
-	$min_btc_trade = 0.00001000; // minimum allowed by the exchange
+	$min_btc_trade = exchange_get($exchange, 'min_btc_trade', 0.00050000); // minimum allowed by the exchange
 	$sell_ask_pct = 1.05;        // sell on ask price + 5%
 	$cancel_ask_pct = 1.20;      // cancel order if our price is more than ask price + 20%
-
 	// auto trade
 	foreach ($balances->Data as $balance)
 	{
 		if ($balance->Total == 0) continue;
 		if ($balance->Symbol == 'BTC') continue;
-
 		$coin = getdbosql('db_coins', "symbol=:symbol AND dontsell=0", array(':symbol'=>$balance->Symbol));
 		if(!$coin) continue;
 		$symbol = $coin->symbol;
 		if (!empty($coin->symbol2)) $symbol = $coin->symbol2;
-
 		$market = getdbosql('db_markets', "coinid=:coinid AND name='cryptopia'", array(':coinid'=>$coin->id));
 		if(!$market) continue;
 		$market->balance = $balance->HeldForTrades;
 		$market->message = $balance->StatusMessage;
-
 		$orders = NULL;
 		if ($balance->HeldForTrades > 0) {
 			sleep(1);
 			$params = array('Market'=>$balance->Symbol."/BTC");
 			$orders = cryptopia_api_user('GetOpenOrders', $params);
-
 			sleep(1);
 			$ticker = cryptopia_api_query('GetMarket', $market->marketid);
 			if(!$ticker || !$ticker->Success || !$ticker->Data) continue;
 		}
-
 		// {"Success":true,"Error":null,"Data":[
 		// {"OrderId":1067904,"TradePairId":2186,"Market":"CHC\/BTC","Type":"Sell","Rate":4.8e-6,"Amount":1500,"Total":0.0072,
 		//  "Remaining":1500,"TimeStamp":"2016-02-01T16:18:44.839246"},
@@ -109,18 +92,14 @@ function doCryptopiaTrading($quick=false)
 			$pairs = explode("/", $order->Market);
 			$pair = $order->Market;
 			if ($pairs[1] != 'BTC') continue;
-
 			// ignore buy orders
 			if(stripos($order->Type, 'Sell') === false) continue;
-
 			if($market->marketid == 0) {
 				$market->marketid = $order->TradePairId;
 				$market->save();
 			}
-
 			$ask = bitcoinvaluetoa($ticker->Data->AskPrice);
 			$sellprice = bitcoinvaluetoa($order->Rate);
-
 			// cancel orders not on the wanted ask range
 			if($sellprice > $ask*$cancel_ask_pct || $flushall)
 			{
@@ -135,7 +114,6 @@ function doCryptopiaTrading($quick=false)
 					':market'=>'cryptopia', ':uuid'=>$order->OrderId
 				));
 				if($db_order) continue;
-
 				// debuglog("cryptopia: store order of {$order->Amount} {$symbol} at $sellprice BTC");
 				$db_order = new db_orders;
 				$db_order->market = 'cryptopia';
@@ -149,7 +127,6 @@ function doCryptopiaTrading($quick=false)
 				$db_order->save();
 			}
 		}
-
 		// drop obsolete orders
 		$list = getdbolist('db_orders', "coinid={$coin->id} AND market='cryptopia'");
 		foreach($list as $db_order)
@@ -163,41 +140,30 @@ function doCryptopiaTrading($quick=false)
 					break;
 				}
 			}
-
 			if(!$found) {
 				// debuglog("cryptopia: delete db order {$db_order->amount} {$coin->symbol} at {$db_order->price} BTC");
 				$db_order->delete();
 			}
 		}
-
 		if($coin->dontsell) continue;
-
 		$market->lasttraded = time();
 		$market->save();
-
 		// new orders
 		$amount = floatval($balance->Available);
 		if(!$amount) continue;
-
 		if($amount*$coin->price < $min_btc_trade || !$market->marketid) continue;
-
 		sleep(1);
 		$data = cryptopia_api_query('GetMarketOrders', $market->marketid."/5");
 		if(!$data || !$data->Success || !$data->Data) continue;
-
 		if($coin->sellonbid)
 		for($i = 0; $i < 5 && $amount >= 0; $i++)
 		{
 			if(!isset($data->Data->Buy[$i])) break;
-
 			$nextbuy = $data->Data->Buy[$i];
 			if($amount*1.1 < $nextbuy->Volume) break;
-
 			$sellprice = bitcoinvaluetoa($nextbuy->Price);
 			$sellamount = min($amount, $nextbuy->Volume);
-
 			if($sellamount*$sellprice < $min_btc_trade) continue;
-
 			debuglog("cryptopia: selling $sellamount $symbol at $sellprice");
 			sleep(1);
 			$params = array('TradePairId'=>$market->marketid, 'Type'=>'Sell', 'Rate'=>$sellprice, 'Amount'=>$sellamount);
@@ -206,24 +172,18 @@ function doCryptopiaTrading($quick=false)
 				debuglog("cryptopia SubmitTrade err: ".json_encode($res));
 				break;
 			}
-
 			$amount -= $sellamount;
 		}
-
 		if($amount <= 0) continue;
-
 		sleep(1);
 		$ticker = cryptopia_api_query('GetMarket', $market->marketid);
 		if(!$ticker || !$ticker->Success || !$ticker->Data) continue;
-
 		if($coin->sellonbid)
 			$sellprice = bitcoinvaluetoa($ticker->Data->BidPrice);
 		else
 			$sellprice = bitcoinvaluetoa($ticker->Data->AskPrice * $sell_ask_pct); // lowest ask price +5%
 		if($amount*$sellprice < $min_btc_trade) continue;
-
 		debuglog("cryptopia: selling $amount $symbol at $sellprice");
-
 		sleep(1);
 		$params = array('TradePairId'=>$market->marketid, 'Type'=>'Sell', 'Rate'=>$sellprice, 'Amount'=>$amount);
 		$res = cryptopia_api_user('SubmitTrade', $params);
@@ -231,7 +191,6 @@ function doCryptopiaTrading($quick=false)
 			debuglog("cryptopia SubmitTrade err: ".json_encode($res));
 			continue;
 		}
-
 		$db_order = new db_orders;
 		$db_order->market = 'cryptopia';
 		$db_order->coinid = $coin->id;
@@ -243,10 +202,8 @@ function doCryptopiaTrading($quick=false)
 		$db_order->created = time();
 		$db_order->save();
 	}
-
 	$withdraw_min = exchange_get($exchange, 'withdraw_min_btc', EXCH_AUTO_WITHDRAW);
-	$withdraw_fee = exchange_get($exchange, 'withdraw_fee_btc', 0.0003);
-
+	$withdraw_fee = exchange_get($exchange, 'withdraw_fee_btc', 0.002);
 	// auto withdraw
 	if(is_object($savebalance))
 	if(floatval($withdraw_min) > 0 && $savebalance->balance >= ($withdraw_min + $withdraw_fee))
@@ -255,7 +212,6 @@ function doCryptopiaTrading($quick=false)
 		$btcaddr = YAAMP_BTCADDRESS;
 		$amount = $savebalance->balance - $withdraw_fee;
 		debuglog("cryptopia: withdraw $amount BTC to $btcaddr");
-
 		sleep(1);
 		$params = array("Currency"=>"BTC", "Amount"=>$amount, "Address"=>$btcaddr);
 		$res = cryptopia_api_user('SubmitWithdraw', $params);
@@ -268,12 +224,10 @@ function doCryptopiaTrading($quick=false)
 			$withdraw->time = time();
 			$withdraw->uuid = $res->Data;
 			$withdraw->save();
-
 			$savebalance->balance = 0;
 			$savebalance->save();
 		} else {
 			debuglog("cryptopia withdraw BTC error: ".json_encode($res));
 		}
 	}
-
 }

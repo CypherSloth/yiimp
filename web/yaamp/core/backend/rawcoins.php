@@ -13,8 +13,10 @@ function updateRawcoins()
 	exchange_set_default('empoex', 'disabled', true);
 	exchange_set_default('coinexchange', 'disabled', true);
 	exchange_set_default('coinsmarkets', 'disabled', true);
-	exchange_set_default('tradesatoshi', 'disabled', true);
 	exchange_set_default('jubi', 'disabled', true);
+	exchange_set_default('nova', 'disabled', true);
+	exchange_set_default('stocksexchange', 'disabled', true);
+	exchange_set_default('tradesatoshi', 'disabled', true);
 
 	settings_prefetch_all();
 
@@ -224,6 +226,23 @@ function updateRawcoins()
 		}
 	}
 
+	if (!exchange_get('stocksexchange', 'disabled')) {
+		$list = stocksexchange_api_query('markets');
+		if(is_array($list))
+		{
+			dborun("UPDATE markets SET deleted=true WHERE name='stocksexchange'");
+			foreach($list as $item) {
+				if ($item->partner != 'BTC')
+					continue;
+				if ($item->active == false)
+					continue;
+				$symbol = strtoupper($item->currency);
+				$name = trim($item->currency_long);
+				updateRawCoin('stocksexchange', $symbol, $name);
+			}
+		}
+	}
+
 	if (!exchange_get('empoex', 'disabled')) {
 		$list = empoex_api_query('marketinfo');
 		if(is_array($list))
@@ -335,6 +354,7 @@ function updateRawCoin($marketname, $symbol, $name='unknown')
 					if ($coin->Symbol == $symbol) {
 						$name = $coin->Name;
 						$algo = strtolower($coin->Algorithm);
+						if ($algo == 'scrypt') $algo = ''; // cryptopia default generally wrong
 						break;
 					}
 				}

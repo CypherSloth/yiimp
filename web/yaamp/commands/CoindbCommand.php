@@ -39,10 +39,10 @@ class CoindbCommand extends CConsoleCommand
 
 		} elseif ($args[0] == 'labels') {
 
-			$nbUpdated  = $this->updateCoinsLabels();
-			$nbUpdated += $this->updateCryptopiaLabels();
+			$nbUpdated  = $this->updateCryptopiaLabels();
+			$nbUpdated += $this->updateCoinCapLabels();
 			$nbUpdated += $this->updateLiveCoinLabels();
-			$nbUpdated += $this->updateYiimpLabels("yiimp.ccminer.org");
+			$nbUpdated += $this->updateYiimpLabels("api.yiimp.eu");
 			$nbUpdated += $this->updateFromJson();
 
 			echo "total updated: $nbUpdated\n";
@@ -73,50 +73,47 @@ class CoindbCommand extends CConsoleCommand
 	}
 
 	/**
-	 * cryptocoincharts api
+	 * coincap.io api
 	 */
-	public static function getCoinChartsData()
+	public static function getCoinCapData()
 	{
-		$json = file_get_contents('http://api.cryptocoincharts.info/listCoins');
+		$json = file_get_contents('http://coincap.io/front');
 		$data = json_decode($json,true);
 		$array = array();
 		foreach ($data as $coin) {
-			$key = strtoupper($coin['id']);
+			$key = strtoupper($coin['short']);
 			if (empty($key)) continue;
 			$array[$key] = $coin;
 		}
 		return $array;
 	}
 
-	public function updateCoinsLabels()
+	public function updateCoinCapLabels()
 	{
-		$modelsPath = $this->basePath.'/yaamp/models';
-		if(!is_dir($modelsPath))
-			echo "Directory $modelsPath is not a directory\n";
-
-		require_once($modelsPath.'/db_coinsModel.php');
-
+		$coins = new db_coins;
 		$nbUpdated = 0;
 
-		$coins = new db_coins;
-		if ($coins instanceof CActiveRecord)
-		{
-			echo "".$coins->count()." coins in the database\n";
+		$dataset = $coins->findAll(array(
+			'condition'=>"name='unknown' OR name=symbol"
+		));
 
-			$dataset = $coins->findAll(array('condition'=>'name = :u', 'params'=>array(':u'=>'unknown')));
-			$json = self::getCoinChartsData();
+		if (!empty($dataset))
+		{
+			$json = self::getCoinCapData();
+			if (empty($json)) return 0;
+
 			foreach ($dataset as $coin) {
 				if ($coin->name == 'unknown' && isset($json[$coin->symbol])) {
 					$data = $json[$coin->symbol];
-					if ($data['name'] != $coin->symbol) {
-						echo "{$coin->symbol}: {$data['name']}\n";
-						$coin->name = $data['name'];
+					if ($data['long'] != $coin->name) {
+						echo "{$coin->symbol}: {$data['long']}\n";
+						$coin->name = trim($data['long']);
 						$nbUpdated += $coin->save();
 					}
 				}
 			}
 			if ($nbUpdated)
-				echo "$nbUpdated coin labels updated from cryptocoincharts.info\n";
+				echo "$nbUpdated coin labels updated from coincap.io\n";
 		}
 		return $nbUpdated;
 	}
@@ -142,14 +139,11 @@ class CoindbCommand extends CConsoleCommand
 
 	public function updateCryptopiaLabels()
 	{
-		$modelsPath = $this->basePath.'/yaamp/models';
-		require_once($modelsPath.'/db_coinsModel.php');
-
 		$coins = new db_coins;
 		$nbUpdated = 0;
 
 		$dataset = $coins->findAll(array(
-			'condition'=>"name=:u OR algo=''",
+			'condition'=>"name=:u OR algo='' OR algo='scrypt'",
 			'params'=>array(':u'=>'unknown')
 		));
 
@@ -163,7 +157,7 @@ class CoindbCommand extends CConsoleCommand
 					if ($cc->Name != $coin->name) {
 						echo "{$coin->symbol}: {$cc->Name}\n";
 						$coin->name = $cc->Name;
-						if (empty($coin->algo))
+						if ($cc->Algorithm != 'scrypt')
 							$coin->algo = strtolower($cc->Algorithm);
 						$nbUpdated += $coin->save();
 					}
@@ -216,21 +210,20 @@ class CoindbCommand extends CConsoleCommand
 
 	public function updateYiimpLabels($pool)
 	{
-		$modelsPath = $this->basePath.'/yaamp/models';
-		require_once($modelsPath.'/db_coinsModel.php');
-
 		$coins = new db_coins;
 		$nbUpdated = 0; $nbAlgos = 0;
 
 		$dataset = $coins->findAll(array(
-			'condition'=>"name=:u OR algo=''",
+			'condition'=>"name=:u OR algo='' OR algo='scrypt'",
 			'params'=>array(':u'=>'unknown')
 		));
 
 		if (!empty($dataset))
 		{
 			$url = "http://{$pool}/api/currencies";
-			$json = json_decode(file_get_contents($url), true);
+			$data = @ file_get_contents($url);
+			if (empty($data)) return 0;
+			$json = json_decode($data, true);
 
 			if (!empty($json))
 			foreach ($dataset as $coin) {
@@ -241,7 +234,8 @@ class CoindbCommand extends CConsoleCommand
 					$coin->name = $cc['name'];
 					$nbUpdated += $coin->save();
 				}
-				if (empty($coin->algo)) {
+				if (empty($cc['algo'])) continue;
+				if (empty($coin->algo) || $coin->algo != $cc['algo']) {
 					$coin->algo = strtolower($cc['algo']);
 					echo "{$coin->symbol}: algo set to {$cc['algo']}\n";
 					$nbAlgos += $coin->save();
@@ -500,7 +494,7 @@ class CoindbCommand extends CConsoleCommand
 	 */
 	public function grabAlcurexIcons()
 	{
-		$url = 'https://alcurex.org/images/coins/';
+		$url = 'https://alcurex.com/CSS/img/coins/';
 		$nbUpdated = 0;
 		$sql = "SELECT DISTINCT coins.id FROM coins INNER JOIN markets M ON M.coinid = coins.id ".
 			"WHERE M.name='alcurex' AND IFNULL(coins.image,'') = ''";

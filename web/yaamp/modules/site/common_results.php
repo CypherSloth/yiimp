@@ -275,10 +275,9 @@ echo '</tr>';
 
 $t = time() - 48*60*60;
 $altmarkets = dbolist("
-	SELECT B.name, SUM((M.balance+M.ontrade)*M.price) AS balance FROM balances B
-	LEFT JOIN markets M ON M.name = B.name
-	WHERE IFNULL(M.base_coin,'BTC') IN ('','BTC')
-	AND NOT IFNULL(M.deleted,0)
+	SELECT B.name, SUM((M.balance+M.ontrade)*M.price) AS balance
+	FROM balances B LEFT JOIN markets M ON M.name = B.name
+	WHERE IFNULL(M.base_coin,'BTC') IN ('','BTC') AND IFNULL(M.deleted,0)=0
 	GROUP BY B.name ORDER BY B.name
 ");
 
@@ -287,13 +286,18 @@ foreach($altmarkets as $row)
 {
 	$balance = bitcoinvaluetoa($row['balance']);
 	$exchange = $row['name'];
-	$alt_balances[$exchange] = $balance;
 	if($balance == 0.0) {
 		echo '<td align="right">-</td>';
 	} else {
+		// to prevent duplicates on multi-algo coins, ignore symbols with a "-"
+		$balance = dboscalar("
+			SELECT SUM((M.balance+M.ontrade)*M.price) FROM markets M INNER JOIN coins C on C.id = M.coinid
+			WHERE M.name='$exchange' AND IFNULL(M.deleted,0)=0 AND INSTR(C.symbol,'-')=0
+		");
+		$balance = bitcoinvaluetoa($balance);
 		echo '<td align="right"><a href="/site/balances?exch='.$exchange.'">'.$balance.'</a></td>';
 	}
-
+	$alt_balances[$exchange] = $balance;
 	$total_altcoins += $balance;
 }
 $total_altcoins = bitcoinvaluetoa($total_altcoins);
@@ -615,7 +619,8 @@ foreach($db_blocks as $db_block)
 	$algo_color = getAlgoColors($coin->algo);
 	echo '<tr style="background-color: '.$algo_color.';">';
 	echo '<td width="18px"><img width="16px" src="'.$coin->image.'"></td>';
-	echo '<td><b><a href="/site/coin?id='.$coin->id.'">'.$coin->name.'</a></b></td>';
+	$flags = $db_block->segwit ? '&nbsp;<img src="/images/ui/segwit.png" height="8px" valign="center" title="segwit">' : '';
+	echo '<td><b><a href="/site/coin?id='.$coin->id.'">'.$coin->name.'</a></b>'.$flags.'</td>';
 
 	echo '<td align="right" style="font-size: .8em">'.$db_block->amount.' '.$coin->symbol.'</td>';
 	echo '<td align="right" style="font-size: .8em" title="found '.$db_block->difficulty_user.'">'.$diff.'</td>';
